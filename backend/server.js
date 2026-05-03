@@ -41,27 +41,27 @@ app.use('/api/v1/tasks', tasks);
 app.use('/api/v1/users', users);
 app.use('/api/v1/dashboard', dashboard);
 
-// Base route
+// Base route (health check / deployment smoke test)
 app.get('/', (req, res) => {
-  res.send('API is running...');
+  res.type('text/plain').send('API is running');
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 5000;
+/** Railway/container platforms need to listen on all interfaces, not localhost-only */
+const HOST = process.env.HOST || '0.0.0.0';
 
 const startServer = async () => {
   try {
-    // Connect to database first
     await connectDB();
-    
-    // Seed data
     await seedData();
 
-    // Start server
-    app.listen(PORT, () => {
-      console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`Server running on http://${HOST}:${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('[Startup failed] Unable to connect to DB or bootstrap server.');
+    console.error('[Startup failed]', error && error.stack ? error.stack : error);
     process.exit(1);
   }
 };
