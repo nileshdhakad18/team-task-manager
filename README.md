@@ -131,7 +131,7 @@ JWT_EXPIRE=7d
 ### Frontend (`.env`)
 
 ```env
-VITE_API_URL=https://team-task-manager-production-3918.up.railway.app
+VITE_API_URL=your_railway_url
 ```
 
 ---
