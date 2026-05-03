@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api, { getErrorMessage } from '../api/client';
 import { Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { Plus, FolderKanban, Calendar, Users } from 'lucide-react';
@@ -18,13 +18,16 @@ const Projects = () => {
   
   // Users state
   const [allUsers, setAllUsers] = useState([]);
+  const [fetchError, setFetchError] = useState('');
+  const [createError, setCreateError] = useState('');
 
   const fetchProjects = async () => {
     try {
-      const res = await axios.get('/projects');
+      setFetchError('');
+      const res = await api.get('/projects');
       setProjects(res.data.data);
     } catch (err) {
-      console.error(err);
+      setFetchError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -33,14 +36,15 @@ const Projects = () => {
   useEffect(() => {
     fetchProjects();
     if (user?.role === 'Admin') {
-      axios.get('/users').then(res => setAllUsers(res.data.data)).catch(console.error);
+      api.get('/users').then(res => setAllUsers(res.data.data)).catch(() => {});
     }
   }, [user]);
 
   const handleCreateProject = async (e) => {
     e.preventDefault();
+    setCreateError('');
     try {
-      await axios.post('/projects', { name, description, deadline, members: selectedMembers });
+      await api.post('/projects', { name, description, deadline, members: selectedMembers });
       setShowModal(false);
       setName('');
       setDescription('');
@@ -48,7 +52,7 @@ const Projects = () => {
       setSelectedMembers([]);
       fetchProjects();
     } catch (err) {
-      console.error(err);
+      setCreateError(getErrorMessage(err));
     }
   };
 
@@ -56,6 +60,10 @@ const Projects = () => {
 
   return (
     <div className="space-y-6">
+      {fetchError ? (
+        <div className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400">{fetchError}</div>
+      ) : null}
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-wide">Projects</h1>
@@ -63,7 +71,10 @@ const Projects = () => {
         </div>
         {user?.role === 'Admin' && (
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setCreateError('');
+              setShowModal(true);
+            }}
             className="flex items-center rounded-xl bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 hover:shadow-primary/40"
           >
             <Plus size={18} className="mr-2" />
@@ -116,6 +127,11 @@ const Projects = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity">
           <div className="w-full max-w-md rounded-3xl bg-surface p-8 shadow-2xl border border-gray-700/50">
             <h2 className="text-2xl font-bold text-white mb-6">Create New Project</h2>
+            {createError ? (
+              <div className="mb-4 rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400">
+                {createError}
+              </div>
+            ) : null}
             <form onSubmit={handleCreateProject} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300">Name</label>
@@ -172,7 +188,10 @@ const Projects = () => {
               <div className="flex justify-end space-x-4 mt-8">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setCreateError('');
+                    setShowModal(false);
+                  }}
                   className="rounded-xl px-5 py-2.5 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
                 >
                   Cancel

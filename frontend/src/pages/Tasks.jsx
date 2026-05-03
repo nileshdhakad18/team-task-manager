@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, useMemo } from 'react';
-import axios from 'axios';
+import api, { getErrorMessage } from '../api/client';
 import { CheckSquare, Clock, AlertCircle, Plus, Search, Filter } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 
@@ -23,22 +23,23 @@ const Tasks = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [projectFilter, setProjectFilter] = useState('All');
+  const [pageError, setPageError] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [actionError, setActionError] = useState('');
 
   const fetchData = async () => {
     try {
-      const [tasksRes, projectsRes] = await Promise.all([
-        axios.get('/tasks'),
-        axios.get('/projects')
-      ]);
+      setPageError('');
+      const [tasksRes, projectsRes] = await Promise.all([api.get('/tasks'), api.get('/projects')]);
       setTasks(tasksRes.data.data);
       setProjects(projectsRes.data.data);
 
       if (user?.role === 'Admin') {
-        const usersRes = await axios.get('/users');
+        const usersRes = await api.get('/users');
         setAllUsers(usersRes.data.data);
       }
     } catch (err) {
-      console.error(err);
+      setPageError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -50,8 +51,9 @@ const Tasks = () => {
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
+    setCreateError('');
     try {
-      await axios.post(`/projects/${selectedProject}/tasks`, {
+      await api.post(`/projects/${selectedProject}/tasks`, {
         title,
         description,
         deadline,
@@ -65,16 +67,17 @@ const Tasks = () => {
       setSelectedProject('');
       fetchData();
     } catch (err) {
-      console.error(err);
+      setCreateError(getErrorMessage(err));
     }
   };
 
   const handleStatusChange = async (taskId, newStatus) => {
     try {
-      await axios.put(`/tasks/${taskId}`, { status: newStatus });
+      setActionError('');
+      await api.put(`/tasks/${taskId}`, { status: newStatus });
       fetchData();
     } catch (err) {
-      console.error(err);
+      setActionError(getErrorMessage(err));
     }
   };
 
@@ -112,6 +115,13 @@ const Tasks = () => {
 
   return (
     <div className="flex h-full flex-col space-y-6">
+      {pageError ? (
+        <div className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400">{pageError}</div>
+      ) : null}
+      {actionError ? (
+        <div className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400">{actionError}</div>
+      ) : null}
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-wide">Task Board</h1>
@@ -119,7 +129,10 @@ const Tasks = () => {
         </div>
         {user?.role === 'Admin' && (
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setCreateError('');
+              setShowModal(true);
+            }}
             className="flex items-center rounded-xl bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 hover:shadow-primary/40"
           >
             <Plus size={18} className="mr-2" />
@@ -227,6 +240,11 @@ const Tasks = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity">
           <div className="w-full max-w-md rounded-3xl bg-surface p-8 shadow-2xl border border-gray-700/50">
             <h2 className="text-2xl font-bold text-white mb-6">Create New Task</h2>
+            {createError ? (
+              <div className="mb-4 rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400">
+                {createError}
+              </div>
+            ) : null}
             <form onSubmit={handleCreateTask} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300">Project</label>
@@ -289,7 +307,10 @@ const Tasks = () => {
               <div className="flex justify-end space-x-4 mt-8">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setCreateError('');
+                    setShowModal(false);
+                  }}
                   className="rounded-xl px-5 py-2.5 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
                 >
                   Cancel

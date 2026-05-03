@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/client';
 
 const AuthContext = createContext();
 
@@ -8,13 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
 
-  // Axios defaults
-  axios.defaults.baseURL = 'http://localhost:5000/api/v1';
-
-  if (token) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  }
-
   useEffect(() => {
     const fetchUser = async () => {
       if (!token) {
@@ -22,10 +15,10 @@ export const AuthProvider = ({ children }) => {
         return;
       }
       try {
-        const res = await axios.get('/auth/me');
+        const res = await api.get('/auth/me');
         setUser(res.data.data);
       } catch (error) {
-        console.error(error);
+        console.error('[Auth]', error.userMessage || error.message);
         localStorage.removeItem('token');
         setToken(null);
         setUser(null);
@@ -37,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    const res = await axios.post('/auth/login', { email, password });
+    const res = await api.post('/auth/login', { email, password });
     localStorage.setItem('token', res.data.token);
     setToken(res.data.token);
     setUser(res.data.user);
@@ -45,7 +38,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password, role) => {
-    const res = await axios.post('/auth/register', { name, email, password, role });
+    const res = await api.post('/auth/register', { name, email, password, role });
     localStorage.setItem('token', res.data.token);
     setToken(res.data.token);
     setUser(res.data.user);
@@ -56,7 +49,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
   };
 
   return (

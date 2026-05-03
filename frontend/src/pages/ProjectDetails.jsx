@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import api, { getErrorMessage } from '../api/client';
 import { ArrowLeft, Users, Calendar, Plus } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 
@@ -20,22 +20,26 @@ const ProjectDetails = () => {
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
+  const [fetchError, setFetchError] = useState('');
+  const [createError, setCreateError] = useState('');
 
   const fetchData = async () => {
     try {
+      setFetchError('');
       const [projectRes, tasksRes] = await Promise.all([
-        axios.get(`/projects/${id}`),
-        axios.get(`/projects/${id}/tasks`)
+        api.get(`/projects/${id}`),
+        api.get(`/projects/${id}/tasks`)
       ]);
       setProject(projectRes.data.data);
       setTasks(tasksRes.data.data);
       
       if (user?.role === 'Admin') {
-        const usersRes = await axios.get('/users');
+        const usersRes = await api.get('/users');
         setAllUsers(usersRes.data.data);
       }
     } catch (err) {
-      console.error(err);
+      setFetchError(getErrorMessage(err));
+      setProject(null);
     } finally {
       setLoading(false);
     }
@@ -47,8 +51,9 @@ const ProjectDetails = () => {
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
+    setCreateError('');
     try {
-      await axios.post(`/projects/${id}/tasks`, {
+      await api.post(`/projects/${id}/tasks`, {
         title,
         description,
         deadline,
@@ -61,11 +66,12 @@ const ProjectDetails = () => {
       setAssignedTo('');
       fetchData(); // Refresh data
     } catch (err) {
-      console.error(err);
+      setCreateError(getErrorMessage(err));
     }
   };
 
   if (loading) return <div className="text-gray-400">Loading project details...</div>;
+  if (fetchError) return <div className="text-red-400">{fetchError}</div>;
   if (!project) return <div className="text-red-400">Project not found.</div>;
 
   return (
@@ -99,7 +105,10 @@ const ProjectDetails = () => {
         <h2 className="text-xl font-semibold text-white">Project Tasks</h2>
         {user?.role === 'Admin' && (
           <button
-            onClick={() => setShowTaskModal(true)}
+            onClick={() => {
+              setCreateError('');
+              setShowTaskModal(true);
+            }}
             className="flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
           >
             <Plus size={18} className="mr-2" />
@@ -145,6 +154,11 @@ const ProjectDetails = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl border border-gray-800">
             <h2 className="text-xl font-bold text-white mb-4">Add New Task</h2>
+            {createError ? (
+              <div className="mb-4 rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400">
+                {createError}
+              </div>
+            ) : null}
             <form onSubmit={handleCreateTask} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300">Title</label>
@@ -193,7 +207,10 @@ const ProjectDetails = () => {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   type="button"
-                  onClick={() => setShowTaskModal(false)}
+                  onClick={() => {
+                    setCreateError('');
+                    setShowTaskModal(false);
+                  }}
                   className="rounded-lg px-4 py-2 text-sm font-medium text-gray-400 hover:text-white"
                 >
                   Cancel

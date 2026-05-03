@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api, { getErrorMessage } from '../api/client';
 import { ClipboardList, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 
@@ -18,10 +18,10 @@ const DashboardHome = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get('/dashboard');
+        const res = await api.get('/dashboard');
         setStats(res.data.data);
       } catch (err) {
-        setError('Failed to load dashboard statistics');
+        setError(getErrorMessage(err));
       } finally {
         setLoading(false);
       }

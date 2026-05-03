@@ -51,10 +51,10 @@ JWT_SECRET=your_secret_key
 JWT_EXPIRE=7d
 ```
 
-Optional `frontend/.env`:
+Create `frontend/.env` (also set the same keys in Vercel → Environment Variables):
 
 ```env
-VITE_API_BASE_URL=http://localhost:5000/api/v1
+VITE_API_URL=https://team-task-manager-production-3918.up.railway.app
 ```
 
 ## API (Overview)

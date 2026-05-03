@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
+import { getErrorMessage } from '../api/client';
 import { LayoutDashboard } from 'lucide-react';
 
 const Register = () => {
@@ -22,7 +23,7 @@ const Register = () => {
       await register(name, email, password, role);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to register');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
