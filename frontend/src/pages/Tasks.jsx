@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useMemo } from 'react';
 import api, { getErrorMessage } from '../api/client';
-import { CheckSquare, Clock, AlertCircle, Plus, Search, Filter } from 'lucide-react';
+import { CheckSquare, Clock, Plus, Search, Filter } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 
 const Tasks = () => {
@@ -21,7 +21,6 @@ const Tasks = () => {
 
   // Filtering State
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
   const [projectFilter, setProjectFilter] = useState('All');
   const [pageError, setPageError] = useState('');
   const [createError, setCreateError] = useState('');
@@ -47,6 +46,7 @@ const Tasks = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleCreateTask = async (e) => {
@@ -85,19 +85,10 @@ const Tasks = () => {
     return tasks.filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             task.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
       const matchesProject = projectFilter === 'All' || (task.project && task.project._id === projectFilter);
-      return matchesSearch && matchesStatus && matchesProject;
+      return matchesSearch && matchesProject;
     });
-  }, [tasks, searchQuery, statusFilter, projectFilter]);
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'Completed': return <CheckSquare size={16} className="text-green-500" />;
-      case 'In Progress': return <Clock size={16} className="text-blue-500" />;
-      default: return <AlertCircle size={16} className="text-yellow-500" />;
-    }
-  };
+  }, [tasks, searchQuery, projectFilter]);
 
   const getStatusBg = (status) => {
     switch (status) {

@@ -4,7 +4,7 @@ import { LayoutDashboard, FolderKanban, CheckSquare, LogOut } from 'lucide-react
 import AuthContext from '../context/AuthContext';
 
 const Sidebar = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { logout } = useContext(AuthContext);
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },

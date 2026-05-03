@@ -73,7 +73,7 @@ const DashboardHome = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Welcome back, {user?.name}!</h1>
-        <p className="mt-1 text-sm text-gray-400">Here's an overview of your projects and tasks.</p>
+        <p className="mt-1 text-sm text-gray-400">Here is an overview of your projects and tasks.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -105,7 +105,7 @@ const DashboardHome = () => {
         
         {stats.recentActivity && stats.recentActivity.length > 0 ? (
           <div className="relative border-l border-gray-800 ml-4 space-y-8 pb-4">
-            {stats.recentActivity.map((activity, idx) => (
+            {stats.recentActivity.map((activity) => (
               <div key={activity._id} className="relative pl-8">
                 {/* Timeline dot */}
                 <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-surface bg-primary ring-4 ring-primary/20" />

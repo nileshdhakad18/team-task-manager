@@ -80,7 +80,7 @@ const Login = () => {
         </form>
 
         <p className="text-center text-sm text-gray-400 mt-6">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link to="/register" className="font-semibold text-primary hover:text-primary/80">
             Sign up
           </Link>
